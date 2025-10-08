@@ -1,7 +1,9 @@
 package com.retrofit.network.retrofitapicall
 
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -9,7 +11,9 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import java.io.File
+import java.util.concurrent.TimeUnit
 
+// build command - ./gradlew assembleRelease
 class ApiClient(
     private val baseUrl: String,
     private val isDebug: Boolean = false
@@ -23,20 +27,21 @@ class ApiClient(
             else HttpLoggingInterceptor.Level.NONE
         }
 
-        client = OkHttpClient.Builder()
+        client = OkHttpClient.Builder().connectTimeout(30, TimeUnit.SECONDS) // connection timeout
+            .readTimeout(30, TimeUnit.SECONDS)    // socket read timeout
+            .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(logging)
             .build()
     }
 
-    suspend fun callApi(
+    private suspend fun performCall(
         requestType: RequestType,
         url: String,
         headers: Map<String, String> = emptyMap(),
-        body: Any
+        body: Any?,
     ): ApiResult<Response> {
         return try {
             val builder = Request.Builder().url(resolveUrl(url))
-
             headers.forEach { (k, v) -> builder.addHeader(k, v) }
 
             val jsonMediaType = "application/json; charset=utf-8".toMediaType()
@@ -84,6 +89,21 @@ class ApiClient(
             }
         } catch (t: Throwable) {
             ApiResult.Failure(null, t.message, t)
+        }
+    }
+
+    fun callApi(
+        requestType: RequestType,
+        url: String,
+        headers: Map<String, String> = emptyMap(),
+        body: Any? = null,
+        callback: (ApiResult<Response>) -> Unit
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = performCall(requestType, url, headers, body)
+            withContext(Dispatchers.Main) {
+                callback(result)
+            }
         }
     }
 

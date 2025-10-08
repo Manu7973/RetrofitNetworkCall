@@ -54,18 +54,20 @@ dependencies {
     api(libs.converter.gson) // if you use GsonConverter
     api(libs.okhttp)
     api(libs.logging.interceptor)
-
     api(libs.kotlinx.coroutines.core)
 }
 
 afterEvaluate {
     publishing {
+        //commands used to build.
+        // ./gradlew :app:RetrofitApiCall:assembleRelease
+        //./gradlew :app:RetrofitApiCall:publishReleasePublicationToMavenLocal
         publications {
             create<MavenPublication>("release") {
                 from(components["release"])   // ✅ use release, not debug
                 groupId = "com.retrofit.network"
                 artifactId = "retrofitcall"
-                version = "1.0.0"
+                version = "1.0.1"
             }
         }
         repositories {

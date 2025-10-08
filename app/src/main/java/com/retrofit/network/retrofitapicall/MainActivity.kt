@@ -33,28 +33,23 @@ class MainActivity : AppCompatActivity() {
                 isDebug = true
             )
 
-            val requestJson = """
-{
-   "data":"0DYkiFRh5JEEdvXJViNPj3TBZ+6bOKq7PSTZABiYITUBeG8lbrN69mrjTMjW14tn7boAv/ZmZws4
-           cHat1GMSjw=="
-}
-"""
+            val requestJson =
+                """{"data":"0DYkiFRh5JEEdvXJViNPj3TBZ+6bOKq7PSTZABiYITUBeG8lbrN69mrjTMjW14tn7boAv/ZmZws4cHat1GMSjw=="}"""
 
             val headers = mapOf(
                 "Content-Type" to "application/json; charset=utf-8",
                 "Content-Length" to "113",
-                "appVersion" to "5.0.4",
+                "appVersion" to "5.1.0",
                 "appOS" to "1",
-                "token" to "PZvlGyaoATnJe1DAov3T1CwDSUfSKCic",
+                "token" to "0adw1nrb0hilWAxkLGc30uDfzGGiNQfF",
             )
-            CoroutineScope(Dispatchers.Main).launch {
-                val result = apiClient.callApi(
-                    RequestType.POST,
-                    "GetChannelPartnersDetailsInArea",
-                    headers,
-                    requestJson
-                )
 
+            apiClient.callApi(
+                RequestType.POST,
+                "GetChannelPartnersDetailsInArea",
+                headers,
+                requestJson
+            ) { result ->   // callback invoked asynchronously
                 when (result) {
                     is ApiResult.Success -> {
                         val response = result.data  // OkHttp Response
@@ -66,7 +61,6 @@ class MainActivity : AppCompatActivity() {
                         Log.e("API", "Error: ${result.message}")
                     }
                 }
-
             }
         }
     }
